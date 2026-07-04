@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LmZa_Chat</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="chat-wrapper">
+        <!-- Hidden by default — JS reveals this once there are messages to show
+             or the input is open, and hides it again when both go away, so no
+             empty panel/border is left sitting on screen. -->
+        <div id="chat-panel" class="hidden">
+            <div id="chat-messages"></div>
+        </div>
+
+        <div id="input-container" class="hidden">
+            <div id="input-row">
+                <span class="prompt-arrow">&#x276F;</span>
+                <input
+                    type="text"
+                    id="chat-input"
+                    maxlength="200"
+                    autocomplete="off"
+                    spellcheck="false"
+                    placeholder="say something..."
+                />
+                <span id="char-count">200</span>
+            </div>
+            <ul id="suggestions" class="hidden"></ul>
+        </div>
+    </div>
+    <script src="chat.js"></script>
+</body>
+</html>

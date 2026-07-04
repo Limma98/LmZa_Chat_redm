@@ -1,0 +1,392 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Share+Tech+Mono&display=swap');
+
+/* ── Theme: Ranch Lantern ────────────────────────────────────────────────────
+   Amber lantern glow, deep wood-brown glass, parchment text.
+   All colours live here — nothing else needs changing for a retheme. */
+:root {
+    --accent:       #e8952e;
+    --accent-soft:  #f5c06a;
+    --accent-deep:  #5c3510;
+    --glow:         232,149,46;   /* accent as r,g,b for rgba() */
+    --brass:        160,110,45;
+    --text:         #d9c9a5;
+    --text-dim:     #7a5830;
+    --wood:         14,8,3;
+    --danger:       #d8431a;
+}
+
+/* ── Reset ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    background: transparent;
+    overflow: hidden;
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+}
+
+/* ── Wrapper — establishes the 3D perspective space ─────────────────────── */
+#chat-wrapper {
+    position: absolute;
+    top: 35%;
+    left: 28px;
+    transform: translateY(-50%);
+    width: 430px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    perspective: 900px;
+    perspective-origin: 30% 50%;
+}
+
+/* ── Chat panel — 3D backing board ──────────────────────────────────────── */
+#chat-panel {
+    position: relative;
+    padding: 4px 2px;
+    border-radius: 5px;
+    transform: rotateX(1.5deg);
+    transform-style: preserve-3d;
+    /* Wood-grain texture via repeating gradients */
+    background:
+        repeating-linear-gradient(
+            89deg,
+            transparent 0px, transparent 2px,
+            rgba(255,160,40,0.014) 2px, rgba(255,160,40,0.014) 5px
+        ),
+        repeating-linear-gradient(
+            180deg,
+            rgba(0,0,0,0) 0px, rgba(0,0,0,0) 48px,
+            rgba(0,0,0,0.03) 48px, rgba(0,0,0,0.03) 96px
+        ),
+        rgba(var(--wood), 0.28);
+    border: 1px solid rgba(var(--brass), 0.28);
+    border-top-color: rgba(var(--brass), 0.14);
+    box-shadow:
+        0 3px 8px rgba(0,0,0,0.55),
+        0 8px 24px rgba(0,0,0,0.4),
+        0 20px 50px rgba(0,0,0,0.22),
+        inset 0 1px 0 rgba(var(--brass), 0.10),
+        inset 0 -1px 0 rgba(0,0,0,0.35);
+}
+
+/* Breath glow — opacity-only animation so the compositor handles it, no repaint */
+#chat-panel::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 8px;
+    box-shadow: 0 0 32px 6px rgba(var(--glow),0.08);
+    pointer-events: none;
+    animation: panelBreath 5s ease-in-out infinite;
+}
+
+@keyframes panelBreath {
+    0%, 100% { opacity: 0; }
+    50%       { opacity: 1; }
+}
+
+/* ── Message list ────────────────────────────────────────────────────────── */
+#chat-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-height: 280px;
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 100%);
+}
+
+/* While input is open: scrollable, no top fade */
+body.chat-open #chat-messages {
+    max-height: 46vh;
+    overflow-y: auto;
+    mask-image: none;
+    -webkit-mask-image: none;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--glow),0.45) transparent;
+}
+body.chat-open #chat-messages::-webkit-scrollbar { width: 5px; }
+body.chat-open #chat-messages::-webkit-scrollbar-thumb {
+    background: rgba(var(--glow),0.4);
+    border-radius: 3px;
+}
+
+/* ── Individual message ──────────────────────────────────────────────────── */
+.msg {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    padding: 4px 10px 4px 12px;
+    border-radius: 3px;
+    border-left: 2px solid transparent;
+    /* Subtle top highlight — light catching the physical edge */
+    border-top: 1px solid rgba(255,210,110,0.045);
+    background:
+        linear-gradient(
+            180deg,
+            rgba(var(--glow),0.055) 0%,
+            rgba(var(--glow),0.01)  28%,
+            transparent             65%
+        ),
+        rgba(var(--wood), 0.84);
+    width: 100%;
+    word-break: break-word;
+    /* Layered shadows for physical depth */
+    box-shadow:
+        0 1px 0 rgba(255,200,80,0.04),
+        0 2px 4px rgba(0,0,0,0.48),
+        0 5px 12px rgba(0,0,0,0.32),
+        0 10px 26px rgba(0,0,0,0.16);
+    animation: msgIn 0.32s cubic-bezier(0.22,1,0.36,1) forwards;
+    opacity: 0;
+    transform: translateX(-12px) scale(0.97);
+}
+
+@keyframes msgIn {
+    0%   { opacity: 0; transform: translateX(-14px) scale(0.96); }
+    100% { opacity: 1; transform: translateX(0)     scale(1);    }
+}
+
+/* Horizontal grain scan-lines across each message */
+.msg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,0.028) 3px,
+        rgba(0,0,0,0.028) 6px
+    );
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+.msg.type-self {
+    border-left-color: var(--accent);
+    box-shadow:
+        -1px 0 12px -1px rgba(var(--glow),0.65),
+        0 1px 0 rgba(255,200,80,0.055),
+        0 2px 5px rgba(0,0,0,0.48),
+        0 5px 14px rgba(0,0,0,0.32),
+        0 12px 28px rgba(0,0,0,0.16);
+}
+
+.msg.type-other {
+    border-left-color: var(--accent-soft);
+    box-shadow:
+        -1px 0 9px -2px rgba(var(--glow),0.42),
+        0 1px 0 rgba(255,200,80,0.04),
+        0 2px 5px rgba(0,0,0,0.48),
+        0 5px 14px rgba(0,0,0,0.32),
+        0 12px 28px rgba(0,0,0,0.16);
+}
+
+.msg.type-system {
+    border-left-color: var(--accent-deep);
+}
+
+/* ── Message parts ───────────────────────────────────────────────────────── */
+.msg-name {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.type-self .msg-name {
+    color: var(--accent);
+    text-shadow:
+        0 0 14px rgba(var(--glow),0.9),
+        0 0 4px  rgba(var(--glow),0.65),
+        0 1px 0  rgba(0,0,0,0.55);
+}
+.type-other .msg-name {
+    color: var(--accent-soft);
+    text-shadow:
+        0 0 11px rgba(var(--glow),0.5),
+        0 1px 0  rgba(0,0,0,0.5);
+}
+.type-system .msg-name { color: #8a5418; }
+
+.msg-text {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+    flex: 1;
+    letter-spacing: 0.2px;
+}
+
+.msg-time {
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    margin-left: 10px;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
+/* ── Input container ─────────────────────────────────────────────────────── */
+#input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* ── Input row ───────────────────────────────────────────────────────────── */
+#input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background:
+        linear-gradient(180deg, rgba(var(--glow),0.07) 0%, transparent 35%),
+        rgba(var(--wood), 0.96);
+    border: 1px solid rgba(var(--glow), 0.48);
+    border-top-color: rgba(var(--glow), 0.28);
+    border-radius: 4px;
+    box-shadow:
+        0 0 0 1px rgba(0,0,0,0.55),
+        0 2px 8px rgba(0,0,0,0.5),
+        0 8px 22px rgba(0,0,0,0.32),
+        0 0 18px rgba(var(--glow),0.10),
+        inset 0 1px 0 rgba(255,200,80,0.055),
+        inset 0 3px 10px rgba(0,0,0,0.65),
+        inset 0 -1px 0 rgba(0,0,0,0.32);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#input-container:focus-within #input-row {
+    border-color: rgba(var(--glow), 0.88);
+    border-top-color: rgba(var(--glow), 0.52);
+    box-shadow:
+        0 0 0 1px rgba(0,0,0,0.55),
+        0 2px 8px rgba(0,0,0,0.5),
+        0 8px 22px rgba(0,0,0,0.32),
+        0 0 30px rgba(var(--glow),0.28),
+        0 0 55px rgba(var(--glow),0.10),
+        inset 0 1px 0 rgba(255,200,80,0.055),
+        inset 0 3px 10px rgba(0,0,0,0.65),
+        inset 0 -1px 0 rgba(0,0,0,0.32);
+}
+
+.prompt-arrow {
+    color: var(--accent);
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    flex-shrink: 0;
+    line-height: 1;
+    animation: promptGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes promptGlow {
+    0%, 100% { text-shadow: 0 0 10px rgba(var(--glow),0.75), 0 0 3px rgba(var(--glow),0.5); }
+    50%       { text-shadow: 0 0 18px rgba(var(--glow),1.0),  0 0 6px rgba(var(--glow),0.8); }
+}
+
+#chat-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    font-size: 14px;
+    caret-color: var(--accent);
+    letter-spacing: 0.5px;
+}
+
+#chat-input::placeholder {
+    color: rgba(92,53,16,0.65);
+    letter-spacing: 1px;
+    font-style: italic;
+}
+
+#char-count {
+    font-size: 11px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+    letter-spacing: 1px;
+    font-variant-numeric: tabular-nums;
+    transition: color 0.2s;
+}
+
+#char-count.warn   { color: var(--accent); text-shadow: 0 0 6px rgba(var(--glow),0.5); }
+#char-count.danger { color: var(--danger); text-shadow: 0 0 7px rgba(216,67,26,0.7); }
+
+/* ── Suggestions ─────────────────────────────────────────────────────────── */
+#suggestions {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    max-height: 160px;
+    overflow: hidden;
+    padding: 3px 0 0 0;
+}
+
+#suggestions.hidden { display: none; }
+
+#suggestions li {
+    background: rgba(var(--wood), 0.88);
+    padding: 5px 10px 5px 14px;
+    border-left: 2px solid rgba(var(--glow),0.2);
+    cursor: pointer;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+    transition: border-color 0.12s, background 0.12s;
+}
+
+#suggestions li:hover,
+#suggestions li.active {
+    border-left-color: var(--accent);
+    background: rgba(var(--glow), 0.09);
+}
+
+.sug-name {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    color: var(--accent);
+    text-shadow: 0 0 8px rgba(var(--glow),0.5);
+    white-space: nowrap;
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+}
+
+.sug-help {
+    font-size: 12px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Input reveal animation ──────────────────────────────────────────────── */
+@keyframes inputReveal {
+    from { opacity: 0; transform: translateY(5px); filter: blur(1px); }
+    to   { opacity: 1; transform: translateY(0);   filter: blur(0); }
+}
+
+/* ── Utility ─────────────────────────────────────────────────────────────── */
+.hidden { display: none !important; }
+
+/* ── Message remove animation ────────────────────────────────────────────── */
+.msg.removing {
+    animation: msgOut 0.2s ease-in forwards;
+}
+
+@keyframes msgOut {
+    to { opacity: 0; transform: translateX(-10px) scale(0.97); }
+}
